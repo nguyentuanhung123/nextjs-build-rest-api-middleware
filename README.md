@@ -213,4 +213,118 @@ console.log(userId); // In ra '12345'
 - Xác Thực URL: Đảm bảo rằng req.url chứa URL hợp lệ. Trong một số môi trường, bạn có thể cần cung cấp cả base URL khi tạo đối tượng URL, như trong ví dụ.
 - Kiểm Tra Giá Trị Null: Các tham số truy vấn có thể không tồn tại, vì vậy luôn kiểm tra giá trị null hoặc undefined khi lấy tham số từ searchParams.
 
-## Nếu bị lỗi MONGO_URI phải là string trong khi ta đã set ! thì ta có thể thử chuyển file .env ra thư mục root
+## Nếu bị lỗi MONGO_URI phải là string trong khi ta đã set ! thì ta có thể thử chuyển file .env ra thư mục root (Tốt nhất là nên để file .env bên trong thư mục gốc)
+
+## Kiểm tra token khi người dùng get Data (Yêu câu ở Postman ở Authorization thì Auth Type: Bearer Token và Token phải có bắt đầu bằng chữ Bearer với dấu cách và tiếp theo là token)
+
+- B1: Tạo folder middlewares - apis trong folder src với file authMiddleware.ts bên trong
+- B2: Tạo file middleware.ts bên trong src
+
+## Giải thích đoạn code trong file autheMiddleware.ts
+
+```ts
+const token = request.headers.get("authorization")?.split(" ")[1];
+```
+
+- Dòng mã này được sử dụng để lấy token từ tiêu đề Authorization trong yêu cầu HTTP. Hãy cùng phân tích chi tiết:
+
+1. request.headers.get("authorization"):
+- request.headers là một đối tượng chứa tất cả các tiêu đề HTTP của yêu cầu.
+- get("authorization") sẽ trả về giá trị của tiêu đề Authorization.
+
+- Ví dụ, nếu tiêu đề Authorization trông như sau:
+
+```jsx
+Authorization: Bearer abcdef12345
+```
+
+- thì request.headers.get("authorization") sẽ trả về chuỗi "Bearer abcdef12345".
+
+2. ?.split(" ")[1]:
+
+- ?. là toán tử tùy chọn (optional chaining). Nếu tiêu đề Authorization không tồn tại hoặc là null, mã sẽ không bị lỗi mà chỉ trả về undefined.
+- .split(" ") tách chuỗi thành một mảng các phần tử bằng cách sử dụng dấu cách (" ") làm điểm phân cách. Trong trường hợp này:
+
+- "Bearer abcdef12345".split(" ") sẽ trả về mảng ["Bearer", "abcdef12345"].
+
+3.  Giá trị cuối cùng:
+- Giá trị cuối cùng của token sẽ là chuỗi "abcdef12345", tức là phần sau từ "Bearer" trong tiêu đề Authorization.
+- Nếu tiêu đề Authorization không tồn tại hoặc không hợp lệ, token sẽ là undefined.
+
+## Tóm tắt:
+- Lấy token: Dòng mã này lấy token từ tiêu đề Authorization.
+- Xử lý lỗi: Nếu không có tiêu đề hoặc tiêu đề không hợp lệ, mã sẽ không gặp lỗi mà trả về undefined.
+- Sử dụng token: Sau khi có được token, bạn có thể sử dụng nó để xác thực người dùng, gửi yêu cầu API khác, hoặc thực hiện bất kỳ thao tác nào khác cần thiết.
+
+
+## Cải thiện hàm kiểm tra token
+- Dưới đây là một phiên bản cải thiện của hàm validateToken để kiểm tra tính hợp lệ của token:
+
+```ts
+const validateToken = (token: string | null | undefined): boolean => {
+    // Kiểm tra xem token có tồn tại và không phải là chuỗi rỗng
+    return !!token && token.trim() !== "";
+}
+```
+
+## Giải thích:
+- Kiểm tra token có tồn tại và không phải là chuỗi rỗng:
+- !!token: Chuyển đổi token thành giá trị boolean. Nếu token là null, undefined, hoặc một chuỗi rỗng, !!token sẽ là false.
+token.trim() !== "": Đảm bảo token không chỉ chứa các ký tự khoảng trắng.
+
+- Trả về boolean:
+- Nếu token hợp lệ (không phải là null, không phải là chuỗi rỗng hoặc chỉ chứa khoảng trắng), hàm trả về true. Ngược lại, trả về false.
+
+## Toán tử && (và) và || (hoặc) là hai toán tử logic cơ bản trong JavaScript và TypeScript, và chúng thường được sử dụng trong các điều kiện và biểu thức logic. Dưới đây là giải thích chi tiết về cách chúng hoạt động:
+
+## Toán tử && (AND)
+- Cú pháp: condition1 && condition2
+- Kết quả: Trả về giá trị của condition2 nếu condition1 là true. Nếu condition1 là false, toán tử && không đánh giá condition2 (ngắn mạch), và trả về false.
+
+```js
+const a = true;
+const b = false;
+
+console.log(a && b); // false
+console.log(a && true); // true
+console.log(false && b); // false
+```
+
+- Giải thích:
++ true && false trả về false vì a là true nhưng b là false.
++ true && true trả về true vì cả hai điều kiện đều là true.
++ false && b trả về false ngay cả khi b có giá trị gì đó, vì false khiến toàn bộ biểu thức là false.
+
+## Toán tử || (OR)
+- Cú pháp: condition1 || condition2
+- Kết quả: Trả về giá trị của condition1 nếu condition1 là true. Nếu condition1 là false, toán tử || sẽ đánh giá và trả về giá trị của condition2.
+
+```js
+const a = true;
+const b = false;
+
+console.log(a || b); // true
+console.log(false || true); // true
+console.log(b || b); // false
+```
+
+- Giải thích:
++ true || false trả về true vì a là true.
++ false || true trả về true vì b là true mặc dù a là false.
++ false || false trả về false vì cả hai điều kiện đều là false.
+
+## Kết hợp && và ||
+- Toán tử && và || có thể được kết hợp trong cùng một biểu thức. Để hiểu rõ hơn, hãy xem xét các ví dụ sau:
+
+```js
+const a = true;
+const b = false;
+const c = true;
+
+console.log(a && (b || c)); // true
+console.log((a && b) || c); // true
+console.log((false && false) || true); // true
+console.log(a && (b || false)); // false
+```
+
+## Set-up enviroment trong POSTMAN để tự động kế thừa và gửi token
